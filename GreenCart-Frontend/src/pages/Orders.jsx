@@ -1,7 +1,9 @@
+// src/pages/Orders.jsx
 import React, { useEffect, useState } from "react";
-import { API } from "../api";
+import { getOrders, createOrder, updateOrder, deleteOrder } from "../api";
 
 export default function Orders() {
+  const token = localStorage.getItem("token");
   const [orders, setOrders] = useState([]);
   const [form, setForm] = useState({
     order_id: "",
@@ -15,16 +17,12 @@ export default function Orders() {
   const [sortField, setSortField] = useState("order_id");
   const [sortOrder, setSortOrder] = useState("asc");
 
-  const token = localStorage.getItem("token");
-
   const fetchOrders = async () => {
     try {
-      const res = await API.get(`/orders?t=${Date.now()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setOrders(Array.isArray(res.data) ? res.data : []);
+      const data = await getOrders(token);
+      setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("❌ Error fetching orders:", err);
+      console.error("Error fetching orders", err);
       setOrders([]);
     }
   };
@@ -34,41 +32,18 @@ export default function Orders() {
     // eslint-disable-next-line
   }, []);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
     try {
-      if (editId) {
-        await API.put(
-          `/orders/${editId}`,
-          {
-            order_id: form.order_id,
-            route_id: form.route_id,
-            revenue: Number(form.revenue || 0),
-            cost: Number(form.cost || 0),
-            status: form.status,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
-        await API.post(
-          "/orders",
-          {
-            order_id: form.order_id,
-            route_id: form.route_id,
-            revenue: Number(form.revenue || 0),
-            cost: Number(form.cost || 0),
-            status: form.status,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
+      if (editId) await updateOrder(token, editId, form);
+      else await createOrder(token, form);
+
       setForm({ order_id: "", route_id: "", revenue: "", cost: "", status: "pending" });
       setEditId(null);
       fetchOrders();
     } catch (err) {
-      console.error("❌ Error saving order:", err);
+      console.error("Failed to save order", err);
     }
   };
 
@@ -86,19 +61,15 @@ export default function Orders() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this order?")) return;
     try {
-      await API.delete(`/orders/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await deleteOrder(token, id);
       fetchOrders();
     } catch (err) {
-      console.error("❌ Error deleting order:", err);
+      console.error("Failed to delete order", err);
     }
   };
 
   const filtered = orders
-    .filter((o) =>
-      (o.order_id || "").toString().toLowerCase().includes(search.toLowerCase())
-    )
+    .filter((o) => (o.order_id || "").toString().toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       const valA = a[sortField] ?? "";
       const valB = b[sortField] ?? "";
