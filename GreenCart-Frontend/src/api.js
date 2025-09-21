@@ -1,8 +1,14 @@
 // src/api.js
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
-const API = axios.create({ baseURL: `${API_BASE}/api` });
+// Default to Render backend in production, localhost in dev
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  (import.meta.env.DEV
+    ? "http://localhost:5000/api"
+    : "https://greencart-mern.onrender.com/api");
+
+const API = axios.create({ baseURL: API_BASE });
 
 // 🔑 Auth
 export function login(username, password) {
@@ -22,20 +28,20 @@ export function getSimHistory(token) {
   });
 }
 
-// 📂 CSV Loader (if still needed)
-export function loadCSVs(token, basePath) {
-  return API.post(
-    "/load_csvs",
-    { base_path: basePath },
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+// 📂 CSV Loader
+export function loadCSVs(token, formData, type) {
+  return API.post(`/load_csv/${type}`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "multipart/form-data",
+    },
+  });
 }
 
+// 📄 PDF Report
 export function getReport(token) {
-  return axios.get(`${API_BASE}/api/report`, {
+  return API.get("/report", {
     headers: { Authorization: `Bearer ${token}` },
-    responseType: "blob" // ensures PDF download
+    responseType: "blob",
   });
 }
