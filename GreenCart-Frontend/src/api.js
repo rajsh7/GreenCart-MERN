@@ -1,10 +1,10 @@
 // src/api.js
 import axios from "axios";
 
-// Default to Render backend in production, localhost in dev
+// Decide API base URL
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  (import.meta.env.DEV
+  (import.meta.env.MODE === "development"
     ? "http://localhost:5000/api"
     : "https://greencart-mern.onrender.com/api");
 
