@@ -1,8 +1,11 @@
-exclude:
-  - "node_modules"
-  - "GreenCart-Backend/node_modules"
-  - "GreenCart-Frontend/node_modules"
-  - "package.json"
-  - "package-lock.json"
-  - "yarn.lock"
-  - "README.md"
+- name: Build React app
+  run: |
+    cd GreenCart-Frontend
+    npm run build
+    touch build/.nojekyll
+
+- name: Deploy to GitHub Pages
+  uses: peaceiris/actions-gh-pages@v3
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    publish_dir: ./GreenCart-Frontend/build
