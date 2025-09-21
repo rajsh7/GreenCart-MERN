@@ -1,12 +1,18 @@
 // src/App.jsx
 import React from "react";
-import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
 
 export default function App() {
   const nav = useNavigate();
   const location = useLocation();
+  const token = localStorage.getItem("token");
 
   const isLoginPage = location.pathname === "/"; // ✅ hide sidebar on login page
+
+  // 🔐 Protect routes: if no token and not on login, go back to login
+  if (!token && !isLoginPage) {
+    return <Navigate to="/" replace />;
+  }
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -33,7 +39,13 @@ export default function App() {
       )}
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: "20px", marginLeft: !isLoginPage ? "220px" : "0" }}>
+      <main
+        style={{
+          flex: 1,
+          padding: "20px",
+          marginLeft: !isLoginPage ? "220px" : "0",
+        }}
+      >
         <Outlet />
       </main>
     </div>

@@ -1,0 +1,8 @@
+exclude:
+  - "node_modules"
+  - "GreenCart-Backend/node_modules"
+  - "GreenCart-Frontend/node_modules"
+  - "package.json"
+  - "package-lock.json"
+  - "yarn.lock"
+  - "README.md"

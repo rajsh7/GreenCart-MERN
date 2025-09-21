@@ -1,3 +1,4 @@
+// src/pages/Orders.jsx
 import React, { useEffect, useState } from "react";
 
 export default function Orders() {
@@ -18,22 +19,23 @@ export default function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/orders", {
+      const res = await fetch(`http://localhost:5000/api/orders?t=${Date.now()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error fetching orders:", err);
+      console.error("Error fetching orders", err);
+      setOrders([]);
     }
   };
 
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line
   }, []);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
     const method = editId ? "PUT" : "POST";
@@ -47,16 +49,16 @@ export default function Orders() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        order_id: form.order_id,
+        route_id: form.route_id,
+        revenue: Number(form.revenue || 0),
+        cost: Number(form.cost || 0),
+        status: form.status,
+      }),
     });
 
-    setForm({
-      order_id: "",
-      route_id: "",
-      revenue: "",
-      cost: "",
-      status: "pending",
-    });
+    setForm({ order_id: "", route_id: "", revenue: "", cost: "", status: "pending" });
     setEditId(null);
     fetchOrders();
   };
@@ -81,11 +83,8 @@ export default function Orders() {
     fetchOrders();
   };
 
-  // 🔎 Filter + Sorting
   const filtered = orders
-    .filter((o) =>
-      o.order_id?.toString().toLowerCase().includes(search.toLowerCase())
-    )
+    .filter((o) => (o.order_id || "").toString().toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       const valA = a[sortField] ?? "";
       const valB = b[sortField] ?? "";
@@ -95,9 +94,8 @@ export default function Orders() {
     });
 
   const toggleSort = (field) => {
-    if (field === sortField) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
+    if (field === sortField) setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    else {
       setSortField(field);
       setSortOrder("asc");
     }
@@ -107,7 +105,6 @@ export default function Orders() {
     <div style={{ padding: "20px" }}>
       <h2>📦 Orders Management</h2>
 
-      {/* Search */}
       <input
         placeholder="Search by Order ID"
         value={search}
@@ -115,50 +112,20 @@ export default function Orders() {
         style={{ marginBottom: "10px" }}
       />
 
-      {/* Form */}
       <div style={{ marginBottom: "20px" }}>
-        <input
-          name="order_id"
-          placeholder="Order ID"
-          value={form.order_id}
-          onChange={handleChange}
-        />
-        <input
-          name="route_id"
-          placeholder="Route ID"
-          value={form.route_id}
-          onChange={handleChange}
-        />
-        <input
-          name="revenue"
-          placeholder="Revenue (₹)"
-          type="number"
-          value={form.revenue}
-          onChange={handleChange}
-        />
-        <input
-          name="cost"
-          placeholder="Cost (₹)"
-          type="number"
-          value={form.cost}
-          onChange={handleChange}
-        />
+        <input name="order_id" placeholder="Order ID" value={form.order_id} onChange={handleChange} />
+        <input name="route_id" placeholder="Route ID" value={form.route_id} onChange={handleChange} />
+        <input name="revenue" placeholder="Revenue (₹)" type="number" value={form.revenue} onChange={handleChange} />
+        <input name="cost" placeholder="Cost (₹)" type="number" value={form.cost} onChange={handleChange} />
         <select name="status" value={form.status} onChange={handleChange}>
           <option value="pending">Pending</option>
           <option value="delivered">Delivered</option>
           <option value="cancelled">Cancelled</option>
         </select>
-        <button onClick={handleSubmit}>
-          {editId ? "Update Order" : "Add Order"}
-        </button>
+        <button onClick={handleSubmit}>{editId ? "Update Order" : "Add Order"}</button>
       </div>
 
-      {/* Table */}
-      <table
-        border="1"
-        cellPadding="8"
-        style={{ width: "100%", borderCollapse: "collapse" }}
-      >
+      <table border="1" cellPadding="8" style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
             <th onClick={() => toggleSort("order_id")}>Order ID ⬍</th>
@@ -175,8 +142,8 @@ export default function Orders() {
               <tr key={o._id}>
                 <td>{o.order_id}</td>
                 <td>{o.route_id}</td>
-                <td>₹{o.revenue}</td>   {/* ✅ fixed */}
-                <td>₹{o.cost}</td> 
+                <td>₹{o.revenue}</td>
+                <td>₹{o.cost}</td>
                 <td>{o.status}</td>
                 <td>
                   <button onClick={() => handleEdit(o)}>✏️ Edit</button>

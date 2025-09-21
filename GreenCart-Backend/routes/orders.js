@@ -1,3 +1,4 @@
+// routes/orders.js
 const express = require("express");
 const Order = require("../models/Order");
 const requireAuth = require("../middleware/authMiddleware");
@@ -13,8 +14,7 @@ router.get("/", requireAuth, async (req, res) => {
     const { status, route } = req.query;
     const filter = {};
     if (status) filter.status = status;
-    if (route) filter.route_id = route; // ✅ match schema
-
+    if (route) filter.route_id = route;
     const orders = await Order.find(filter).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
@@ -36,17 +36,16 @@ router.get("/:id", requireAuth, async (req, res) => {
 // CREATE new order
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const { order_id, route_id, revenue, cost, status } = req.body;
-    if (!order_id || revenue == null || cost == null) {
-      return res.status(400).json({ error: "order_id, revenue and cost are required" });
-    }
+    const { order_id, route_id, revenue, cost, status, delivery_time } = req.body;
+    if (!order_id) return res.status(400).json({ error: "order_id required" });
 
     const newOrder = await Order.create({
-      order_id,
-      route_id,
-      revenue,
-      cost,
+      order_id: String(order_id),
+      route_id: String(route_id || ""),
+      revenue: Number(revenue || 0),
+      cost: Number(cost || 0),
       status: status || "pending",
+      delivery_time: delivery_time || null,
     });
 
     res.status(201).json(newOrder);
@@ -58,14 +57,12 @@ router.post("/", requireAuth, async (req, res) => {
 // UPDATE order
 router.put("/:id", requireAuth, async (req, res) => {
   try {
-    const { order_id, route_id, revenue, cost, status } = req.body;
-
+    const { order_id, route_id, revenue, cost, status, delivery_time } = req.body;
     const updated = await Order.findByIdAndUpdate(
       req.params.id,
-      { order_id, route_id, revenue, cost, status },
+      { order_id, route_id, revenue, cost, status, delivery_time },
       { new: true, runValidators: true }
     );
-
     if (!updated) return res.status(404).json({ error: "Order not found" });
     res.json(updated);
   } catch (err) {

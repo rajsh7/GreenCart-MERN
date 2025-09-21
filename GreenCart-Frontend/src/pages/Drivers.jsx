@@ -130,7 +130,7 @@ export default function Drivers() {
         <thead>
           <tr>
             <th>Name</th>
-            <th>Shift Hours</th>
+            <th>Current Shift Hours</th>
             <th>Past 7 Days</th>
             <th>Actions</th>
           </tr>
