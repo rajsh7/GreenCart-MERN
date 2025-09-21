@@ -1,6 +1,6 @@
 // src/pages/UploadCSV.jsx
 import React, { useState } from "react";
-import axios from "axios";
+import { uploadCSV } from "../api";
 
 export default function UploadCSV() {
   const token = localStorage.getItem("token");
@@ -8,12 +8,9 @@ export default function UploadCSV() {
   const [type, setType] = useState("drivers");
   const [message, setMessage] = useState("");
 
-  // Use your deployed backend
-  const API_BASE = "https://greencart-mern.onrender.com/api";
-
   const handleUpload = async () => {
     if (!file) {
-      alert("Please select a file first!");
+      alert("Please select a CSV file first!");
       return;
     }
 
@@ -21,44 +18,30 @@ export default function UploadCSV() {
     formData.append("file", file);
 
     try {
-      const res = await axios.post(`${API_BASE}/load_csv/${type}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setMessage(`✅ ${res.data.message} (${res.data.count} records)`);
-      setFile(null); // reset file after upload
+      const res = await uploadCSV(token, type, formData);
+      setMessage(`✅ ${res.message} (${res.count} records)`);
+      setFile(null);
     } catch (err) {
-      if (err.response) {
-        setMessage(`❌ Upload failed: ${err.response.data.error}`);
-      } else {
-        setMessage(`❌ Upload failed: Server unreachable`);
-      }
+      console.error(err);
+      setMessage(`❌ Upload failed: ${err.message || "Server unreachable"}`);
     }
   };
 
   return (
-    <div className="page-container">
+    <div style={{ padding: "20px" }}>
       <h2>📂 Upload CSV</h2>
 
-      <div className="form-row">
+      <div style={{ marginBottom: "10px" }}>
         <select value={type} onChange={(e) => setType(e.target.value)}>
           <option value="drivers">Drivers</option>
           <option value="routes">Routes</option>
           <option value="orders">Orders</option>
         </select>
-
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
-
+        <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} />
         <button onClick={handleUpload}>⬆️ Upload</button>
       </div>
 
-      {file && <p>Selected: {file.name}</p>}
+      {file && <p>Selected file: {file.name}</p>}
       {message && <p>{message}</p>}
     </div>
   );
