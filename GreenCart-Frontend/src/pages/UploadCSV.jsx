@@ -1,5 +1,6 @@
+// src/pages/UploadCSV.jsx
 import React, { useState } from "react";
-import { uploadCSV } from "../api";
+import axios from "axios";
 
 export default function UploadCSV() {
   const token = localStorage.getItem("token");
@@ -8,28 +9,62 @@ export default function UploadCSV() {
   const [message, setMessage] = useState("");
 
   const handleUpload = async () => {
-    if (!file) return alert("Please select a file!");
+    if (!file) {
+      alert("Please select a file first!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      const res = await uploadCSV(token, type, file);
+      const res = await axios.post(
+        `http://localhost:5000/api/load_csv/${type}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setMessage(`✅ ${res.data.message} (${res.data.count} records)`);
-      setFile(null);
+      setFile(null); // reset file after upload
     } catch (err) {
-      if (err.response) setMessage(`❌ Upload failed: ${err.response.data.error}`);
-      else setMessage("❌ Upload failed: Server unreachable");
+      if (err.response) {
+        setMessage(`❌ Upload failed: ${err.response.data.error}`);
+      } else {
+        setMessage(`❌ Upload failed: Server unreachable`);
+      }
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="page-container">
       <h2>📂 Upload CSV</h2>
-      <select value={type} onChange={(e) => setType(e.target.value)}>
-        <option value="drivers">Drivers</option>
-        <option value="routes">Routes</option>
-        <option value="orders">Orders</option>
-      </select>
-      <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} />
-      <button onClick={handleUpload}>⬆️ Upload</button>
+
+      <div className="form-row">
+        {/* Dropdown to select type */}
+        <select value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="drivers">Drivers</option>
+          <option value="routes">Routes</option>
+          <option value="orders">Orders</option>
+        </select>
+
+        {/* File picker */}
+        <input
+          type="file"
+          accept=".csv"
+          onChange={(e) => setFile(e.target.files[0])}
+        />
+
+        <button onClick={handleUpload}>⬆️ Upload</button>
+      </div>
+
+      {/* Show file name */}
       {file && <p>Selected: {file.name}</p>}
+
+      {/* Status message */}
       {message && <p>{message}</p>}
     </div>
   );
