@@ -1,7 +1,6 @@
 // src/api.js
 import axios from "axios";
 
-// Decide API base URL
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   (import.meta.env.MODE === "development"
@@ -48,25 +47,40 @@ export function getReport(token) {
 
 // 👨‍✈️ Drivers
 export function getDrivers(token) {
-  return API.get("/drivers", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return API.get("/drivers", { headers: { Authorization: `Bearer ${token}` } });
 }
-
 export function createDriver(token, payload) {
-  return API.post("/drivers", payload, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return API.post("/drivers", payload, { headers: { Authorization: `Bearer ${token}` } });
 }
-
 export function updateDriver(token, id, payload) {
-  return API.put(`/drivers/${id}`, payload, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return API.put(`/drivers/${id}`, payload, { headers: { Authorization: `Bearer ${token}` } });
+}
+export function deleteDriver(token, id) {
+  return API.delete(`/drivers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
-export function deleteDriver(token, id) {
-  return API.delete(`/drivers/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+// 📦 Orders
+export function getOrders(token) {
+  return API.get("/orders", { headers: { Authorization: `Bearer ${token}` } });
+}
+export function saveOrder(token, id, payload) {
+  return id
+    ? API.put(`/orders/${id}`, payload, { headers: { Authorization: `Bearer ${token}` } })
+    : API.post("/orders", payload, { headers: { Authorization: `Bearer ${token}` } });
+}
+export function deleteOrder(token, id) {
+  return API.delete(`/orders/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+}
+
+// 🛣 Routes
+export function getRoutes(token) {
+  return API.get("/routes", { headers: { Authorization: `Bearer ${token}` } });
+}
+export function saveRoute(token, id, payload) {
+  return id
+    ? API.put(`/routes/${id}`, payload, { headers: { Authorization: `Bearer ${token}` } })
+    : API.post("/routes", payload, { headers: { Authorization: `Bearer ${token}` } });
+}
+export function deleteRoute(token, id) {
+  return API.delete(`/routes/${id}`, { headers: { Authorization: `Bearer ${token}` } });
 }
