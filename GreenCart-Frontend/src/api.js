@@ -1,86 +1,65 @@
 // src/api.js
 import axios from "axios";
 
+// Base URL: Vite env variable > localhost (dev) > Render (prod)
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  (import.meta.env.MODE === "development"
+  (import.meta.env.DEV
     ? "http://localhost:5000/api"
     : "https://greencart-mern.onrender.com/api");
 
 const API = axios.create({ baseURL: API_BASE });
 
-// 🔑 Auth
-export function login(username, password) {
-  return API.post("/login", { username, password });
-}
+console.log("🔗 API Base URL:", API_BASE);
 
-// 🚚 Simulation
-export function runSim(token, payload) {
-  return API.post("/simulate", payload, {
+// ========== AUTH ==========
+export const login = (username, password) =>
+  API.post("/login", { username, password });
+
+// ========== ORDERS ==========
+export const getOrders = () => API.get("/orders");
+export const createOrder = (payload) => API.post("/orders", payload);
+
+// ========== ROUTES ==========
+export const getRoutes = () => API.get("/routes");
+export const createRoute = (payload) => API.post("/routes", payload);
+
+// ========== SIMULATION ==========
+export const runSim = (token, payload) =>
+  API.post("/simulate", payload, {
     headers: { Authorization: `Bearer ${token}` },
   });
-}
 
-export function getSimHistory(token) {
-  return API.get("/simulate/history", {
+export const getSimHistory = (token) =>
+  API.get("/simulate/history", {
     headers: { Authorization: `Bearer ${token}` },
   });
-}
 
-// 📂 CSV Loader
-export function loadCSVs(token, formData, type) {
-  return API.post(`/load_csv/${type}`, formData, {
+// ========== CSV ==========
+export const loadCSVs = (token, formData, type) =>
+  API.post(`/load_csv/${type}`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",
     },
   });
-}
 
-// 📄 PDF Report
-export function getReport(token) {
-  return API.get("/report", {
+// ========== REPORT ==========
+export const getReport = (token) =>
+  API.get("/report", {
     headers: { Authorization: `Bearer ${token}` },
     responseType: "blob",
   });
-}
 
-// 👨‍✈️ Drivers
-export function getDrivers(token) {
-  return API.get("/drivers", { headers: { Authorization: `Bearer ${token}` } });
-}
-export function createDriver(token, payload) {
-  return API.post("/drivers", payload, { headers: { Authorization: `Bearer ${token}` } });
-}
-export function updateDriver(token, id, payload) {
-  return API.put(`/drivers/${id}`, payload, { headers: { Authorization: `Bearer ${token}` } });
-}
-export function deleteDriver(token, id) {
-  return API.delete(`/drivers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-}
+// ========== DRIVERS ==========
+export const getDrivers = (token) =>
+  API.get("/drivers", { headers: { Authorization: `Bearer ${token}` } });
 
-// 📦 Orders
-export function getOrders(token) {
-  return API.get("/orders", { headers: { Authorization: `Bearer ${token}` } });
-}
-export function saveOrder(token, id, payload) {
-  return id
-    ? API.put(`/orders/${id}`, payload, { headers: { Authorization: `Bearer ${token}` } })
-    : API.post("/orders", payload, { headers: { Authorization: `Bearer ${token}` } });
-}
-export function deleteOrder(token, id) {
-  return API.delete(`/orders/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-}
+export const createDriver = (token, payload) =>
+  API.post("/drivers", payload, { headers: { Authorization: `Bearer ${token}` } });
 
-// 🛣 Routes
-export function getRoutes(token) {
-  return API.get("/routes", { headers: { Authorization: `Bearer ${token}` } });
-}
-export function saveRoute(token, id, payload) {
-  return id
-    ? API.put(`/routes/${id}`, payload, { headers: { Authorization: `Bearer ${token}` } })
-    : API.post("/routes", payload, { headers: { Authorization: `Bearer ${token}` } });
-}
-export function deleteRoute(token, id) {
-  return API.delete(`/routes/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-}
+export const updateDriver = (token, id, payload) =>
+  API.put(`/drivers/${id}`, payload, { headers: { Authorization: `Bearer ${token}` } });
+
+export const deleteDriver = (token, id) =>
+  API.delete(`/drivers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
