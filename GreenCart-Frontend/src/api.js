@@ -1,65 +1,98 @@
 // src/api.js
 import axios from "axios";
 
-// Base URL: Vite env variable > localhost (dev) > Render (prod)
+// Set base URL depending on environment
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  (import.meta.env.DEV
+  (import.meta.env.MODE === "development"
     ? "http://localhost:5000/api"
     : "https://greencart-mern.onrender.com/api");
 
-const API = axios.create({ baseURL: API_BASE });
+// Helper function to create headers with token
+const authHeader = (token) => ({ Authorization: `Bearer ${token}` });
 
-console.log("🔗 API Base URL:", API_BASE);
+// 🔑 Auth
+export const login = (username, password) => {
+  return axios.post(`${API_BASE}/login`, { username, password });
+};
 
-// ========== AUTH ==========
-export const login = (username, password) =>
-  API.post("/login", { username, password });
+// 🚚 Simulation
+export const runSim = (token, payload) => {
+  return axios.post(`${API_BASE}/simulate`, payload, { headers: authHeader(token) });
+};
 
-// ========== ORDERS ==========
-export const getOrders = () => API.get("/orders");
-export const createOrder = (payload) => API.post("/orders", payload);
+export const getSimHistory = (token) => {
+  return axios.get(`${API_BASE}/simulate/history`, { headers: authHeader(token) });
+};
 
-// ========== ROUTES ==========
-export const getRoutes = () => API.get("/routes");
-export const createRoute = (payload) => API.post("/routes", payload);
+// 📂 CSV Loader
+export const uploadCSV = (token, type, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
 
-// ========== SIMULATION ==========
-export const runSim = (token, payload) =>
-  API.post("/simulate", payload, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-export const getSimHistory = (token) =>
-  API.get("/simulate/history", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-// ========== CSV ==========
-export const loadCSVs = (token, formData, type) =>
-  API.post(`/load_csv/${type}`, formData, {
+  return axios.post(`${API_BASE}/load_csv/${type}`, formData, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...authHeader(token),
       "Content-Type": "multipart/form-data",
     },
   });
+};
 
-// ========== REPORT ==========
-export const getReport = (token) =>
-  API.get("/report", {
-    headers: { Authorization: `Bearer ${token}` },
+// 📄 PDF Report
+export const getReport = (token) => {
+  return axios.get(`${API_BASE}/report`, {
+    headers: authHeader(token),
     responseType: "blob",
   });
+};
 
-// ========== DRIVERS ==========
-export const getDrivers = (token) =>
-  API.get("/drivers", { headers: { Authorization: `Bearer ${token}` } });
+// 👨‍✈️ Drivers
+export const getDrivers = (token) => {
+  return axios.get(`${API_BASE}/drivers`, { headers: authHeader(token) });
+};
 
-export const createDriver = (token, payload) =>
-  API.post("/drivers", payload, { headers: { Authorization: `Bearer ${token}` } });
+export const createDriver = (token, payload) => {
+  return axios.post(`${API_BASE}/drivers`, payload, { headers: authHeader(token) });
+};
 
-export const updateDriver = (token, id, payload) =>
-  API.put(`/drivers/${id}`, payload, { headers: { Authorization: `Bearer ${token}` } });
+export const updateDriver = (token, id, payload) => {
+  return axios.put(`${API_BASE}/drivers/${id}`, payload, { headers: authHeader(token) });
+};
 
-export const deleteDriver = (token, id) =>
-  API.delete(`/drivers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+export const deleteDriver = (token, id) => {
+  return axios.delete(`${API_BASE}/drivers/${id}`, { headers: authHeader(token) });
+};
+
+// 📦 Orders
+export const getOrders = (token) => {
+  return axios.get(`${API_BASE}/orders`, { headers: authHeader(token) });
+};
+
+export const createOrder = (token, payload) => {
+  return axios.post(`${API_BASE}/orders`, payload, { headers: authHeader(token) });
+};
+
+export const updateOrder = (token, id, payload) => {
+  return axios.put(`${API_BASE}/orders/${id}`, payload, { headers: authHeader(token) });
+};
+
+export const deleteOrder = (token, id) => {
+  return axios.delete(`${API_BASE}/orders/${id}`, { headers: authHeader(token) });
+};
+
+// 🛣 Routes
+export const getRoutes = (token) => {
+  return axios.get(`${API_BASE}/routes`, { headers: authHeader(token) });
+};
+
+export const createRoute = (token, payload) => {
+  return axios.post(`${API_BASE}/routes`, payload, { headers: authHeader(token) });
+};
+
+export const updateRoute = (token, id, payload) => {
+  return axios.put(`${API_BASE}/routes/${id}`, payload, { headers: authHeader(token) });
+};
+
+export const deleteRoute = (token, id) => {
+  return axios.delete(`${API_BASE}/routes/${id}`, { headers: authHeader(token) });
+};
