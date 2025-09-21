@@ -1,36 +1,23 @@
-// src/pages/Orders.jsx
 import React, { useEffect, useState } from "react";
 import { getOrders, createOrder, updateOrder, deleteOrder } from "../api";
 
 export default function Orders() {
   const token = localStorage.getItem("token");
   const [orders, setOrders] = useState([]);
-  const [form, setForm] = useState({
-    order_id: "",
-    route_id: "",
-    revenue: "",
-    cost: "",
-    status: "pending",
-  });
+  const [form, setForm] = useState({ order_id: "", route_id: "", revenue: "", cost: "", status: "pending" });
   const [editId, setEditId] = useState(null);
-  const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("order_id");
-  const [sortOrder, setSortOrder] = useState("asc");
 
   const fetchOrders = async () => {
     try {
-      const data = await getOrders(token);
-      setOrders(Array.isArray(data) ? data : []);
+      const res = await getOrders(token);
+      setOrders(res.data);
     } catch (err) {
       console.error("Error fetching orders", err);
       setOrders([]);
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-    // eslint-disable-next-line
-  }, []);
+  useEffect(() => { fetchOrders(); }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -38,70 +25,24 @@ export default function Orders() {
     try {
       if (editId) await updateOrder(token, editId, form);
       else await createOrder(token, form);
-
       setForm({ order_id: "", route_id: "", revenue: "", cost: "", status: "pending" });
       setEditId(null);
       fetchOrders();
-    } catch (err) {
-      console.error("Failed to save order", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  const handleEdit = (o) => {
-    setForm({
-      order_id: o.order_id,
-      route_id: o.route_id,
-      revenue: o.revenue,
-      cost: o.cost,
-      status: o.status,
-    });
-    setEditId(o._id);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this order?")) return;
-    try {
-      await deleteOrder(token, id);
-      fetchOrders();
-    } catch (err) {
-      console.error("Failed to delete order", err);
-    }
-  };
-
-  const filtered = orders
-    .filter((o) => (o.order_id || "").toString().toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      const valA = a[sortField] ?? "";
-      const valB = b[sortField] ?? "";
-      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-
-  const toggleSort = (field) => {
-    if (field === sortField) setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    else {
-      setSortField(field);
-      setSortOrder("asc");
-    }
-  };
+  const handleEdit = (o) => { setForm(o); setEditId(o._id); };
+  const handleDelete = async (id) => { await deleteOrder(token, id); fetchOrders(); };
 
   return (
     <div style={{ padding: "20px" }}>
       <h2>📦 Orders Management</h2>
-
-      <input
-        placeholder="Search by Order ID"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: "10px" }}
-      />
-
+      <input placeholder="Search" />
       <div style={{ marginBottom: "20px" }}>
         <input name="order_id" placeholder="Order ID" value={form.order_id} onChange={handleChange} />
         <input name="route_id" placeholder="Route ID" value={form.route_id} onChange={handleChange} />
-        <input name="revenue" placeholder="Revenue (₹)" type="number" value={form.revenue} onChange={handleChange} />
-        <input name="cost" placeholder="Cost (₹)" type="number" value={form.cost} onChange={handleChange} />
+        <input name="revenue" type="number" placeholder="Revenue" value={form.revenue} onChange={handleChange} />
+        <input name="cost" type="number" placeholder="Cost" value={form.cost} onChange={handleChange} />
         <select name="status" value={form.status} onChange={handleChange}>
           <option value="pending">Pending</option>
           <option value="delivered">Delivered</option>
@@ -109,40 +50,22 @@ export default function Orders() {
         </select>
         <button onClick={handleSubmit}>{editId ? "Update Order" : "Add Order"}</button>
       </div>
-
-      <table border="1" cellPadding="8" style={{ width: "100%", borderCollapse: "collapse" }}>
+      <table border="1" cellPadding="8">
         <thead>
           <tr>
-            <th onClick={() => toggleSort("order_id")}>Order ID ⬍</th>
-            <th onClick={() => toggleSort("route_id")}>Route ID ⬍</th>
-            <th onClick={() => toggleSort("revenue")}>Revenue ⬍</th>
-            <th onClick={() => toggleSort("cost")}>Cost ⬍</th>
-            <th onClick={() => toggleSort("status")}>Status ⬍</th>
-            <th>Actions</th>
+            <th>Order ID</th><th>Route ID</th><th>Revenue</th><th>Cost</th><th>Status</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {filtered.length > 0 ? (
-            filtered.map((o) => (
-              <tr key={o._id}>
-                <td>{o.order_id}</td>
-                <td>{o.route_id}</td>
-                <td>₹{o.revenue}</td>
-                <td>₹{o.cost}</td>
-                <td>{o.status}</td>
-                <td>
-                  <button onClick={() => handleEdit(o)}>✏️ Edit</button>
-                  <button onClick={() => handleDelete(o._id)}>❌ Delete</button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="6" style={{ textAlign: "center" }}>
-                No orders found.
+          {orders.map((o) => (
+            <tr key={o._id}>
+              <td>{o.order_id}</td><td>{o.route_id}</td><td>{o.revenue}</td><td>{o.cost}</td><td>{o.status}</td>
+              <td>
+                <button onClick={() => handleEdit(o)}>✏️</button>
+                <button onClick={() => handleDelete(o._id)}>❌</button>
               </td>
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
     </div>
