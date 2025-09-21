@@ -16,25 +16,8 @@ const reportRoutes = require("./routes/report");
 
 const app = express();
 
-// ✅ Allowed origins
-const allowedOrigins = [
-  "http://localhost:5173", // local Vite dev
-  "https://green-cart-mern-zmhx.vercel.app", // your Vercel frontend
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
-
+// Middlewares
+app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
