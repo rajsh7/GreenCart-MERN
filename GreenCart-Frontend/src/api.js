@@ -45,3 +45,28 @@ export function getReport(token) {
     responseType: "blob",
   });
 }
+
+// 👨‍✈️ Drivers
+export function getDrivers(token) {
+  return API.get("/drivers", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function createDriver(token, payload) {
+  return API.post("/drivers", payload, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateDriver(token, id, payload) {
+  return API.put(`/drivers/${id}`, payload, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function deleteDriver(token, id) {
+  return API.delete(`/drivers/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
