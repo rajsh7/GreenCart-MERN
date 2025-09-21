@@ -1,7 +1,9 @@
+// src/pages/Routes.jsx
 import React, { useEffect, useState } from "react";
-import { API } from "../api";
+import { getRoutes, createRoute, updateRoute, deleteRoute } from "../api";
 
 export default function RoutesPage() {
+  const token = localStorage.getItem("token");
   const [routes, setRoutes] = useState([]);
   const [form, setForm] = useState({
     route_id: "",
@@ -13,22 +15,19 @@ export default function RoutesPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("token");
-
   const fetchRoutes = async () => {
     try {
-      const res = await API.get("/routes", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setRoutes(Array.isArray(res.data) ? res.data : []);
+      const data = await getRoutes(token);
+      setRoutes(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("❌ Error fetching routes:", err);
+      console.error("Error fetching routes", err);
       setError("⚠️ Could not load routes.");
     }
   };
 
   useEffect(() => {
     fetchRoutes();
+    // eslint-disable-next-line
   }, []);
 
   const handleChange = (e) => {
@@ -42,37 +41,26 @@ export default function RoutesPage() {
       return;
     }
     const distance = parseFloat(form.distance_km);
+    const time = parseFloat(form.base_time_min);
     if (isNaN(distance) || distance <= 0) {
-      setError("Distance must be a positive number.");
+      setError("Distance must be positive.");
       return;
     }
-    const time = parseFloat(form.base_time_min);
     if (isNaN(time) || time <= 0) {
-      setError("Base time must be a positive number.");
+      setError("Base time must be positive.");
       return;
     }
 
     setLoading(true);
     try {
-      if (editId) {
-        await API.put(
-          `/routes/${editId}`,
-          { ...form, distance_km: distance, base_time_min: time },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
-        await API.post(
-          "/routes",
-          { ...form, distance_km: distance, base_time_min: time },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
+      if (editId) await updateRoute(token, editId, { ...form, distance_km: distance, base_time_min: time });
+      else await createRoute(token, { ...form, distance_km: distance, base_time_min: time });
 
       setForm({ route_id: "", distance_km: "", traffic_level: "Low", base_time_min: "" });
       setEditId(null);
       fetchRoutes();
     } catch (err) {
-      console.error("❌ Error saving route:", err);
+      console.error(err);
       setError("⚠️ Could not save route.");
     } finally {
       setLoading(false);
@@ -92,12 +80,10 @@ export default function RoutesPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this route?")) return;
     try {
-      await API.delete(`/routes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await deleteRoute(token, id);
       fetchRoutes();
     } catch (err) {
-      console.error("❌ Error deleting route:", err);
+      console.error(err);
       setError("⚠️ Could not delete route.");
     }
   };
@@ -105,7 +91,6 @@ export default function RoutesPage() {
   return (
     <div style={{ padding: "20px" }}>
       <h2>🛣 Routes Management</h2>
-
       {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
 
       <div style={{ marginBottom: "20px" }}>
@@ -117,9 +102,7 @@ export default function RoutesPage() {
           <option value="High">High</option>
         </select>
         <input name="base_time_min" type="number" placeholder="Base Time (min)" value={form.base_time_min} onChange={handleChange} />
-        <button onClick={handleSubmit} disabled={loading}>
-          {loading ? "Saving..." : editId ? "Update Route" : "Add Route"}
-        </button>
+        <button onClick={handleSubmit} disabled={loading}>{loading ? "Saving..." : editId ? "Update Route" : "Add Route"}</button>
       </div>
 
       <table border="1" cellPadding="8" style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -147,9 +130,7 @@ export default function RoutesPage() {
               </tr>
             ))
           ) : (
-            <tr>
-              <td colSpan="5" style={{ textAlign: "center" }}>No routes found.</td>
-            </tr>
+            <tr><td colSpan="5" style={{ textAlign: "center" }}>No routes found.</td></tr>
           )}
         </tbody>
       </table>
