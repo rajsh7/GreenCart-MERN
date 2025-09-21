@@ -8,6 +8,9 @@ export default function UploadCSV() {
   const [type, setType] = useState("drivers");
   const [message, setMessage] = useState("");
 
+  // Use your deployed backend
+  const API_BASE = "https://greencart-mern.onrender.com/api";
+
   const handleUpload = async () => {
     if (!file) {
       alert("Please select a file first!");
@@ -18,16 +21,12 @@ export default function UploadCSV() {
     formData.append("file", file);
 
     try {
-      const res = await axios.post(
-        `http://localhost:5000/api/load_csv/${type}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.post(`${API_BASE}/load_csv/${type}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setMessage(`✅ ${res.data.message} (${res.data.count} records)`);
       setFile(null); // reset file after upload
     } catch (err) {
@@ -44,14 +43,12 @@ export default function UploadCSV() {
       <h2>📂 Upload CSV</h2>
 
       <div className="form-row">
-        {/* Dropdown to select type */}
         <select value={type} onChange={(e) => setType(e.target.value)}>
           <option value="drivers">Drivers</option>
           <option value="routes">Routes</option>
           <option value="orders">Orders</option>
         </select>
 
-        {/* File picker */}
         <input
           type="file"
           accept=".csv"
@@ -61,10 +58,7 @@ export default function UploadCSV() {
         <button onClick={handleUpload}>⬆️ Upload</button>
       </div>
 
-      {/* Show file name */}
       {file && <p>Selected: {file.name}</p>}
-
-      {/* Status message */}
       {message && <p>{message}</p>}
     </div>
   );
