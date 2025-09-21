@@ -1,4 +1,10 @@
 import React, { useEffect, useState } from "react";
+import {
+  getDrivers,
+  createDriver,
+  updateDriver,
+  deleteDriver,
+} from "../api";
 
 export default function Drivers() {
   const [drivers, setDrivers] = useState([]);
@@ -11,12 +17,8 @@ export default function Drivers() {
 
   const fetchDrivers = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/drivers", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch drivers");
-      const data = await res.json();
-      setDrivers(Array.isArray(data) ? data : []);
+      const res = await getDrivers(token);
+      setDrivers(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching drivers:", err);
       setError("⚠️ Could not load drivers.");
@@ -33,34 +35,29 @@ export default function Drivers() {
   };
 
   const handleSubmit = async () => {
-    // 🔎 Validation
     if (!form.name.trim()) {
       setError("Driver name is required.");
       return;
     }
     const hours = parseFloat(form.current_shift_hours);
     if (isNaN(hours) || hours < 0 || hours > 24) {
-      setError("Shift hours must be a number between 0 and 24.");
+      setError("Shift hours must be between 0 and 24.");
       return;
     }
 
     setLoading(true);
     try {
-      const method = editId ? "PUT" : "POST";
-      const url = editId
-        ? `http://localhost:5000/api/drivers/${editId}`
-        : "http://localhost:5000/api/drivers";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...form, current_shift_hours: hours }),
-      });
-
-      if (!res.ok) throw new Error("Failed to save driver");
+      if (editId) {
+        await updateDriver(token, editId, {
+          ...form,
+          current_shift_hours: hours,
+        });
+      } else {
+        await createDriver(token, {
+          ...form,
+          current_shift_hours: hours,
+        });
+      }
 
       setForm({ name: "", current_shift_hours: "" });
       setEditId(null);
@@ -74,7 +71,10 @@ export default function Drivers() {
   };
 
   const handleEdit = (d) => {
-    setForm({ name: d.name, current_shift_hours: d.current_shift_hours });
+    setForm({
+      name: d.name,
+      current_shift_hours: d.current_shift_hours || "",
+    });
     setEditId(d._id);
     setError("");
   };
@@ -83,11 +83,7 @@ export default function Drivers() {
     if (!window.confirm("Are you sure you want to delete this driver?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/drivers/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to delete driver");
+      await deleteDriver(token, id);
       fetchDrivers();
     } catch (err) {
       console.error(err);
