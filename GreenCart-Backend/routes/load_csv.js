@@ -1,12 +1,13 @@
-// routes/load_csv.js
 const express = require("express");
 const multer = require("multer");
 const csv = require("csv-parser");
 const fs = require("fs");
+const path = require("path");
+const requireAuth = require("../middleware/authMiddleware");
+
 const Driver = require("../models/Driver");
 const Route = require("../models/Route");
 const Order = require("../models/Order");
-const requireAuth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -15,16 +16,19 @@ const upload = multer({ dest: "uploads/" });
 router.post("/:type", requireAuth, upload.single("file"), async (req, res) => {
   try {
     const { type } = req.params;
-    const filePath = req.file.path;
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    const filePath = path.join(__dirname, "..", req.file.path);
 
     let Model;
-    if (type === "drivers") Model = Driver;
-    else if (type === "routes") Model = Route;
-    else if (type === "orders") Model = Order;
-    else return res.status(400).json({ error: "Invalid type" });
+    switch (type) {
+      case "drivers": Model = Driver; break;
+      case "routes": Model = Route; break;
+      case "orders": Model = Order; break;
+      default: return res.status(400).json({ error: "Invalid type" });
+    }
 
     const results = [];
-
     fs.createReadStream(filePath)
       .pipe(csv())
       .on("data", (row) => {
@@ -54,11 +58,8 @@ router.post("/:type", requireAuth, upload.single("file"), async (req, res) => {
       .on("end", async () => {
         try {
           await Model.insertMany(results, { ordered: false });
-          fs.unlinkSync(filePath); // cleanup
-          res.json({
-            message: `${type} uploaded successfully`,
-            count: results.length,
-          });
+          fs.unlinkSync(filePath);
+          res.json({ message: `${type} uploaded successfully`, count: results.length });
         } catch (err) {
           if (err.code === 11000) {
             res.json({
@@ -67,13 +68,13 @@ router.post("/:type", requireAuth, upload.single("file"), async (req, res) => {
               duplicates: true,
             });
           } else {
-            console.error("Insert error", err);
+            console.error("Insert error:", err);
             res.status(500).json({ error: "Insert failed", details: err.message });
           }
         }
       });
   } catch (err) {
-    console.error("CSV upload error", err);
+    console.error("CSV upload error:", err);
     res.status(500).json({ error: "Upload failed", details: err.message });
   }
 });
