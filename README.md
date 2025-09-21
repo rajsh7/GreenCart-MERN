@@ -1,10 +1,4 @@
-Perfect 🎉 since your project is nearly done, let’s create a **professional README.md** for your **GreenCart Logistics Optimization Project**.
-
-Here’s a complete version 👇
-
----
-
-# 🚚 GreenCart Logistics Optimization
+🚚 GreenCart Logistics Optimization
 
 GreenCart is a logistics simulation and management platform that helps optimize delivery operations.
 It provides **driver management, route management, order management, simulation engine, analytics, and PDF report generation**.
